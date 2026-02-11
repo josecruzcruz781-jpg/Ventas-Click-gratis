@@ -9,7 +9,7 @@ Una solución sencilla y universal para negocios que necesitan un catálogo digi
 * **🔗 Portabilidad Total:** Genera un link único que guarda toda tu configuración sin necesidad de bases de datos.
 
 ## 🚀 Prueba la App
-👉 **[ACCEDER AL CATÁLOGO](https://josecruzcruz781-jpg.github.io/ventas-click/)**
+👉 **[ACCEDER AL CATÁLOGO](https://josecruzcruz781-jpg.github.io/Ventas-Click-gratis/)**
 
 ## 🛠️ Configuración para Dueños
 1. Abre la web y ve a la pestaña **"Mi Negocio"**.
