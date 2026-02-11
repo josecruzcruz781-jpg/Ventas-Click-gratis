@@ -16,3 +16,5 @@ Una solución sencilla y universal para negocios que necesitan un catálogo digi
 2. Ingresa tus datos, WhatsApp y productos.
 3. Dale a **"Guardar"** y luego a **"Generar Link para Clientes"**.
 4. Comparte ese link generado; tus clientes verán tu catálogo listo para comprar.
+5. Cuando generes el link para tus clientes, asegúrate de haber llenado primero tu número de WhatsApp en la pestaña de "Mi Negocio", para que el botón de pedido funcione a la primera.
+   
