@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Ventas Click - Catálogo Directo</title>
+    <style>
+        :root {
+            --primary: #0a0e17; --secondary: #1a1f2e; --accent: #00d4ff;
+            --text: #e0e0ff; --card-bg: rgba(26, 31, 46, 0.7);
+            --success: #25D366; --pay-btn: #6c5ce7;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: sans-serif; -webkit-tap-highlight-color: transparent; }
+        body { background: var(--primary); color: var(--text); padding-bottom: 90px; }
+        .container { max-width: 500px; margin: 0 auto; padding: 15px; }
+        .header { padding: 20px; background: var(--secondary); border-bottom: 2px solid var(--accent); text-align: center; position: sticky; top: 0; z-index: 100; }
+        .business-info { background: var(--card-bg); border-radius: 16px; padding: 20px; margin-bottom: 20px; border: 1px solid rgba(0,212,255,0.2); }
+        .input-group { margin-bottom: 12px; }
+        .input-label { display: block; font-size: 0.7rem; color: var(--accent); font-weight: bold; margin-bottom: 4px; }
+        .input-field { width: 100%; padding: 12px; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.1); border-radius: 10px; color: white; font-size: 1rem; }
+        .product-card { background: rgba(255,255,255,0.05); border-radius: 14px; padding: 15px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+        .qty-controls { display: flex; align-items: center; gap: 12px; background: #000; padding: 5px 12px; border-radius: 20px; border: 1px solid var(--accent); }
+        .btn { width: 100%; padding: 15px; border-radius: 12px; border: none; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; font-size: 1rem; }
+        .btn-whatsapp { background: var(--success); color: black; margin-top: 15px; }
+        .btn-pay { background: var(--pay-btn); color: white; margin-bottom: 10px; }
+        .btn-share { background: var(--accent); color: black; margin-top: 20px; }
+        .payment-selector { display: flex; gap: 10px; margin: 15px 0; }
+        .pay-opt { flex: 1; padding: 12px; border-radius: 10px; border: 1px solid var(--accent); text-align: center; cursor: pointer; opacity: 0.4; }
+        .pay-opt.active { opacity: 1; background: var(--accent); color: black; }
+        .bottom-bar { position: fixed; bottom: 0; width: 100%; background: var(--secondary); display: flex; justify-content: space-around; padding: 12px; border-top: 1px solid #333; }
+        .tab-btn { background: none; border: none; color: #666; font-weight: bold; font-size: 0.8rem; }
+        .tab-btn.active { color: var(--accent); }
+        #toast { position: fixed; bottom: 100px; left: 50%; transform: translateX(-50%); background: white; color: black; padding: 10px 20px; border-radius: 20px; display: none; z-index: 2000; font-size: 0.8rem; font-weight: bold; }
+    </style>
+</head>
+<body>
+
+<header class="header">
+    <h1 id="mainTitle">🛍️ Catálogo Click</h1>
+</header>
+
+<div class="container">
+    <section id="clientView">
+        <div class="business-info">
+            <h2 id="displayBizName">Cargando...</h2>
+            <p id="displayBizDesc">Selecciona tus productos y envía el pedido</p>
+        </div>
+
+        <div class="input-group">
+            <label class="input-label">TU NOMBRE</label>
+            <input type="text" id="cName" class="input-field" placeholder="Nombre completo">
+        </div>
+        <div class="input-group">
+            <label class="input-label">TU CONTACTO / DIRECCIÓN</label>
+            <input type="text" id="cAddr" class="input-field" placeholder="Teléfono y dirección">
+        </div>
+
+        <h3 style="color: var(--accent); margin: 20px 0 10px; font-size: 0.8rem;">PRODUCTOS</h3>
+        <div id="catalog"></div>
+
+        <div class="payment-selector">
+            <div class="pay-opt active" id="payCash" onclick="setPay('EFECTIVO')">💵 EFECTIVO</div>
+            <div class="pay-opt" id="payDig" onclick="setPay('ELECTRÓNICO')">📱 PAGO ELECTRÓNICO</div>
+        </div>
+
+        <div class="business-info" style="border-style: dashed; text-align: right;">
+            <p style="font-size: 0.9rem;">Envío: <span id="mSym1">$</span><span id="dCost">0.00</span></p>
+            <h2 style="color: var(--accent);">Total: <span id="mSym2">$</span><span id="total">0.00</span></h2>
+        </div>
+
+        <button id="payBtn" class="btn btn-pay" style="display:none;" onclick="copyPay()">COPIAR DATOS DE PAGO</button>
+        <button class="btn btn-whatsapp" onclick="enviarPedido()">ENVIAR PEDIDO POR WHATSAPP</button>
+    </section>
+
+    <section id="ownerView" style="display: none;">
+        <h3 style="color: var(--accent); margin-bottom: 15px;">CONFIGURACIÓN</h3>
+        <input type="text" id="ownName" class="input-field" placeholder="Nombre del Negocio" style="margin-bottom:10px">
+        <input type="tel" id="ownWhatsApp" class="input-field" placeholder="WhatsApp (Con código de país)" style="margin-bottom:10px">
+        <input type="text" id="ownSym" class="input-field" placeholder="Símbolo de Moneda (Ej: $, €, Q)" style="margin-bottom:10px">
+        <input type="text" id="ownPay" class="input-field" placeholder="Datos para Pago Electrónico" style="margin-bottom:10px">
+        <input type="number" id="ownDelivery" class="input-field" placeholder="Costo de Envío" style="margin-bottom:10px">
+        
+        <div id="ownProducts"></div>
+        <button class="btn" onclick="addProd()" style="background: #222; color: var(--accent); border: 1px solid var(--accent);">➕ AÑADIR PRODUCTO</button>
+        <button class="btn btn-whatsapp" onclick="save()">💾 GUARDAR CAMBIOS</button>
+        <button class="btn btn-share" onclick="generateShareLink()">📤 GENERAR LINK PARA CLIENTES</button>
+    </section>
+</div>
+
+<nav class="bottom-bar" id="navBar">
+    <button class="tab-btn active" id="tabClient" onclick="show('client')">🛒 TIENDA</button>
+    <button class="tab-btn" id="tabOwner" onclick="show('owner')">⚙️ MI NEGOCIO</button>
+</nav>
+
+<div id="toast"></div>
+
+<script>
+    let payMethod = 'EFECTIVO';
+    let biz = { name: "Mi Negocio", wa: "", sym: "$", pay: "", delivery: 0, prods: [] };
+
+    function init() {
+        const params = new URLSearchParams(window.location.search);
+        const data = params.get('d');
+        if (data) {
+            biz = JSON.parse(decodeURIComponent(escape(atob(data))));
+            document.getElementById('navBar').style.display = 'none';
+        } else {
+            const saved = localStorage.getItem('mpClick_Univ');
+            if (saved) biz = JSON.parse(saved);
+        }
+        render();
+    }
+
+    function save() {
+        biz.name = document.getElementById('ownName').value || "Mi Negocio";
+        biz.wa = document.getElementById('ownWhatsApp').value.replace(/\D/g, '');
+        biz.sym = document.getElementById('ownSym').value || "$";
+        biz.pay = document.getElementById('ownPay').value;
+        biz.delivery = parseFloat(document.getElementById('ownDelivery').value) || 0;
+        localStorage.setItem('mpClick_Univ', JSON.stringify(biz));
+        render(); notify("✅ Guardado");
+    }
+
+    function generateShareLink() {
+        save();
+        if(!biz.wa) return alert("Ingresa tu número de WhatsApp");
+        const b64 = btoa(unescape(encodeURIComponent(JSON.stringify(biz))));
+        const url = window.location.href.split('?')[0] + '?d=' + b64;
+        navigator.clipboard.writeText(url).then(() => alert("¡Link de cliente copiado!"));
+    }
+
+    function render() {
+        document.getElementById('displayBizName').innerText = biz.name;
+        document.getElementById('ownName').value = biz.name;
+        document.getElementById('ownWhatsApp').value = biz.wa;
+        document.getElementById('ownSym').value = biz.sym;
+        document.getElementById('ownPay').value = biz.pay;
+        document.getElementById('ownDelivery').value = biz.delivery;
+        document.getElementById('mSym1').innerText = biz.sym;
+        document.getElementById('mSym2').innerText = biz.sym;
+        document.getElementById('dCost').innerText = biz.delivery.toFixed(2);
+
+        const cat = document.getElementById('catalog'); cat.innerHTML = '';
+        biz.prods.forEach(p => {
+            const d = document.createElement('div'); d.className = 'product-card';
+            d.innerHTML = `<div><b>${p.n}</b><br><span style="color:var(--accent)">${biz.sym}${p.p.toFixed(2)}</span></div>
+                <div class="qty-controls"><button onclick="chg(${p.id},-1)">-</button><span>${p.q||0}</span><button onclick="chg(${p.id},1)">+</button></div>`;
+            cat.appendChild(d);
+        });
+
+        const list = document.getElementById('ownProducts'); list.innerHTML = '';
+        biz.prods.forEach(p => {
+            const d = document.createElement('div'); d.className = 'product-card';
+            d.innerHTML = `<span>${p.n} (${biz.sym}${p.p})</span><button onclick="del(${p.id})">🗑️</button>`;
+            list.appendChild(d);
+        });
+        calc();
+    }
+
+    function addProd() {
+        const n = prompt("Producto:"); const p = prompt("Precio:");
+        if(n && p) { biz.prods.push({ id: Date.now(), n, p: parseFloat(p), q: 0 }); render(); }
+    }
+
+    function del(id) { if(confirm("¿Eliminar?")) { biz.prods = biz.prods.filter(p => p.id !== id); render(); } }
+    function chg(id, v) { const p = biz.prods.find(x => x.id === id); p.q = Math.max(0, (p.q || 0) + v); render(); }
+    function calc() {
+        const sub = biz.prods.reduce((a, b) => a + (b.p * (b.q || 0)), 0);
+        const total = sub > 0 ? (sub + biz.delivery) : 0;
+        document.getElementById('total').innerText = total.toFixed(2);
+    }
+
+    function setPay(m) {
+        payMethod = m;
+        document.getElementById('payCash').classList.toggle('active', m === 'EFECTIVO');
+        document.getElementById('payDig').classList.toggle('active', m === 'ELECTRÓNICO');
+        document.getElementById('payBtn').style.display = (m === 'ELECTRÓNICO' && biz.pay) ? 'flex' : 'none';
+    }
+
+    function copyPay() { navigator.clipboard.writeText(biz.pay); notify("📋 Datos de pago copiados"); }
+
+    function enviarPedido() {
+        const n = document.getElementById('cName').value;
+        const a = document.getElementById('cAddr').value;
+        const s = biz.prods.filter(p => p.q > 0);
+        if(!n || !a || !s.length) return alert("Completa los datos");
+
+        let t = `*NUEVO PEDIDO - ${biz.name.toUpperCase()}*\n\n*Cliente:* ${n}\n*Info:* ${a}\n*Pago:* ${payMethod}\n\n*PRODUCTOS:*\n`;
+        s.forEach(p => t += `- ${p.n} x${p.q} (${biz.sym}${(p.q*p.p).toFixed(2)})\n`);
+        t += `\n*TOTAL: ${biz.sym}${document.getElementById('total').innerText}*`;
+        window.open(`https://wa.me/${biz.wa}?text=${encodeURIComponent(t)}`);
+    }
+
+    function show(v) {
+        document.getElementById('clientView').style.display = v === 'client' ? 'block' : 'none';
+        document.getElementById('ownerView').style.display = v === 'owner' ? 'block' : 'none';
+        document.getElementById('tabClient').classList.toggle('active', v === 'client');
+        document.getElementById('tabOwner').classList.toggle('active', v === 'owner');
+    }
+
+    function notify(m) { const t = document.getElementById('toast'); t.innerText = m; t.style.display = 'block'; setTimeout(() => t.style.display = 'none', 3000); }
+
+    init();
+</script>
+</body>
+</html>
